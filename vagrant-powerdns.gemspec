@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Vagrant plugin to manage powerdns zone record"
   spec.description   = "This plugin will push changes to PowerDNS API after vagrant up / halt"
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.homepage      = "https://github.com/chenull/vagrant-powerdns"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
