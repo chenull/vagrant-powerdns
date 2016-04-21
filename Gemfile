@@ -5,9 +5,9 @@ group :development do
 end
 
 group :plugins do
-  gem "vagrant-env"
-  gem "pry-byebug"
-  gem "httparty"
-  gem "vagrant-xenserver", :path => "/Users/ayik/Repositories/xen/vagrant-xenserver"
+#  gem "vagrant-env"
+#  gem "pry-byebug"
+#  gem "httparty"
+#  gem "vagrant-xenserver", :path => "/Users/ayik/Repositories/xen/vagrant-xenserver"
   gem "vagrant-powerdns", path: "."
 end
