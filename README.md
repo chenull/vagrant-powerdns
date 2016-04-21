@@ -15,11 +15,12 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "centos7"
+  config.vm.hostname = "ayik"
 
   # PowerDNS API Configuration
   config.powerdns.api_url = "http://powerdns:8081"
   config.powerdns.api_key = "rahasia"
-  config.powerdns.default_zone = "dev.jcamp.net"
+  config.powerdns.default_zone = "dev.example.com"
 
   config.vm.network "public_network", ip: "192.168.2.2"
 end

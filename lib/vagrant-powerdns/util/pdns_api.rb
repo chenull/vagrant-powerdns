@@ -91,7 +91,34 @@ class PdnsRestApiClient
     puts
   end
 
-  def modify_domain(domain, ip, zone_id, server_id='localhost', comments=nil)
+  def modify_domain(domain:, ip:, zone_id:, server_id:'localhost', comments: nil)
+    #  {
+    #      :rrsets => [
+    #          [0] {
+    #                 :name => "gundul.dev.jcamp.net",
+    #                 :type => "A",
+    #                 :records => [
+    #                  [0] {
+    #                          :name => "gundul.dev.jcamp.net",
+    #                          :type => "A",
+    #                           :ttl => 3600,
+    #                      :disabled => false,
+    #                       :content => "192.168.10.11"
+    #                      }
+    #                 ],
+    #                 :comments => [
+    #                  [0] {
+    #                             :name => "gundul.dev.jcamp.net",
+    #                             :type => "A",
+    #                      :modified_at => 1461239952,
+    #                          :account => "ayik",
+    #                          :content => "NGopoE cuk..."
+    #                      }
+    #                 ],
+    #                 :changetype => "replace"
+    #              }
+    #       ]
+    #  }
     @body = {
       rrsets: [
         {
@@ -111,17 +138,12 @@ class PdnsRestApiClient
       ]
     }
     if !comments.nil?
-      @body[:rrsets][:comments] = comments
+       @body[:rrsets][0][:comments] = comments
     end
     self.class.patch("/servers/#{server_id}/zones/#{zone_id}", body: @body.to_json)
   end
 
-  def disable_domain(domain, zone_id, server_id='localhost')
-    myname = Etc.getpwuid[:gecos]
-    myuser = Etc.getlogin.gsub(/\s+/, '')
-    myhost = Socket.gethostname
-    mydata = "#{myname} (#{myuser})"
-
+  def disable_domain(domain:, zone_id:, ip:, server_id:'localhost', comments: nil)
     @body = {
       rrsets: [
         {
@@ -132,21 +154,17 @@ class PdnsRestApiClient
               name: domain,
               type: "A",
               ttl: 300,
+              content: ip,
               disabled: true
-            }
-          ],
-          comments: [
-            {
-              content: "#{mydata} disabled this record from #{myhost}",
-              account: myname,
-              name: domain,
-              type: "A"
             }
           ],
           changetype: "replace"
         }
       ]
     }
+    if !comments.nil?
+       @body[:rrsets][0][:comments] = comments
+    end
     self.class.patch("/servers/#{server_id}/zones/#{zone_id}", body: @body.to_json)
   end
   # def trace(server_id='localhost')
