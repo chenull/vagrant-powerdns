@@ -12,7 +12,8 @@ class Zone
       name = name.dotted
     end
 
-    raise ArgumentError, "no domain name given" if name.empty?
+    raise ArgumentError, "Invalid Zone: #{name.to_s}" if !name.is_a?(String)
+    raise ArgumentError, "no zone name given" if name.empty?
 
     # parse domain name ...
     name = name.to_s

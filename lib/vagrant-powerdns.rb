@@ -12,19 +12,19 @@ module Vagrant
       description "A PowerDNS Vagrant plugin that manages the zone record via vagrant up/destroy"
 
       inc_path = Pathname.new(File.expand_path("../vagrant-powerdns/includes", __FILE__))
+      lib_path = Pathname.new(File.expand_path("../vagrant-powerdns", __FILE__))
+      util_path = Pathname.new(File.expand_path("../vagrant-powerdns/util", __FILE__))
+
       require inc_path.join("Zone.class.rb")
       require inc_path.join("Ip.class.rb")
-
-      util_path = Pathname.new(File.expand_path("../vagrant-powerdns/util", __FILE__))
-      require util_path.join("pdns_api")
-
-      lib_path = Pathname.new(File.expand_path("../vagrant-powerdns", __FILE__))
-      require lib_path.join("action")
 
       config "powerdns" do
         require lib_path.join("config")
         Config
       end
+
+      require util_path.join("pdns_api")
+      require lib_path.join("action")
 
       action_hook(:powerdns, :machine_action_up) do |hook|
         hook.append(Vagrant::Action::Up)

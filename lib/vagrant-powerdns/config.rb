@@ -22,57 +22,39 @@ module Vagrant
           @default_zone = Zone.new @default_zone;
         end
 
+        @api_url = nil if @api_url == UNSET_VALUE
+        @api_key = nil if @api_key == UNSET_VALUE
         @disable = false if @disable == UNSET_VALUE
-
-        # default way to obtain ip address
-        if @ip == UNSET_VALUE
-          @ip = proc do |guest_machine|
-            ips = nil
-            puts "SUDO SUUUUUU............"
-            guest_machine.communicate.sudo("hostname -I") do |type, data|
-              ips = data.scan /[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/
-            end
-            ips
-          end
-        end
 
       end
 
       def enabled?
-        not @disable and not @api_url.nil? and not @api_key.nil?
+        @api_url.is_a?(String) or @api_key.is_a?(String) or @default_zone.is_a?(String)
       end
 
       def validate(machine)
-        return unless enabled?
+        if enabled?
+          #return if not @api_url.nil? and not @api_key.nil? and not @default_zone.nil?
 
-        errors = []
+          errors = []
 
-        # verify @disable
-        if @disable != true and @disable != false then errors << 'invalid disable setting' end
+          # verify @disable
+          if @disable != true and @disable != false then errors << 'invalid disable setting' end
 
-        # verify zone
-        begin @default_zone = Zone.new @default_zone; rescue => e; errors << e.message end
+          # verify zone
+          begin @default_zone = Zone.new @default_zone; rescue => e; errors << e.message end
 
-        # verify ip
-        if @ip.is_a? Array
-          @ip.map!{|ip| begin Ip.new(ip); rescue => e; errors << e.message end}
+          # verify api_url
+          begin @api_url = String.new @api_url; rescue => e; errors << "powerdns.api_url: Invalid URL. It should be like `http://ns.example.com:8081'" end
 
-        elsif @ip.is_a? String
-          begin @ip = Ip.new(@ip); rescue => e; errors << e.message end
-          @ip = [@ip]
+          # verify api_key
+          begin @api_key = String.new @api_key; rescue => e; errors << "powerdns.api_key: Invalid API Key. It should be like `api_key_of_powerdns'"  end
 
-        elsif @ip.is_a? Proc
-          # okay, there is nothing to verify at the moment
-        else
-          @ip = nil
+          # verify zone
+          #begin @default_zone = Zone.new @default_zone; rescue => e; errors << "config.powerdns.default_zone: Invalid Zone #{@default_zone}. It should be like: `dev.example.com'" end
+
+          return { 'PowerDNS configuration' => errors }
         end
-
-        # verify API URL/key
-        #if @resolver
-        # errors << "file '#{@dnsmasqconf}' does not exist" unless File.exists? @dnsmasqconf
-        #end
-
-        return { 'PowerDNS configuration' => errors }
       end
 
     end

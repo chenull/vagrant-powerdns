@@ -28,10 +28,11 @@ module Vagrant
               p = PdnsRestApiClient.new(env[:machine].config.powerdns.api_url,
                                         env[:machine].config.powerdns.api_key)
 
-              # Only update if IP changed
-              if p.zone(@zone)["records"].select { |v| v["type"] == "A" and
-                v["name"] == @domain and v["content"] == ip}.empty?
+              # Only update if IP changed or inactive
+              record_not_found = p.zone(@zone)["records"].select {|v| v["type"] == "A" and v["name"] == @domain and v["content"] == ip}.empty?
+              record_disabled = p.zone(@zone)["records"].select { |v| v["type"] == "A" and v["name"] == @domain and v["disable"]}.empty?
 
+              if record_not_found or record_disabled
                 env[:ui].info "PowerDNS action..."
                 # Append new comment
                 new_comment = {
