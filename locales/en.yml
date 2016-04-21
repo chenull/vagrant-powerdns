@@ -1,0 +1,15 @@
+en:
+  vagrant_powerdns:
+    config:
+      api_url: |-
+        powerdns URL must be defined via "api_url"
+      api_key: |-
+        powerdns API Key must be defined via "api_key"
+    errors:
+      api_error: |-
+        API authentication error. Please check "api_url" and "api_key"
+    info:
+      post_record: |-
+        Creating record %{host} with address %{ip} into zone %{zone}
+      delete_record: |-
+        Deleting record %{host} from zone %{zone}
