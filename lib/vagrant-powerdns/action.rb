@@ -5,10 +5,10 @@ module Vagrant
       def initialize(app, env)
         @app = app
         @machine = env[:machine]
+        @zone = env[:machine].config.powerdns.default_zone
         @host = env[:machine].config.vm.hostname.nil? ?
           env[:machine].name.to_s : env[:machine].config.vm.hostname.to_s
-        @domain = @host + env[:machine].config.powerdns.default_zone.to_s
-        @zone = env[:machine].config.powerdns.default_zone.name
+        @domain = @host.include?(@zone.name)? @host : @host + @zone.dotted
 
         # Identify who i am
         @myname = Etc.getpwuid[:gecos]
@@ -24,13 +24,14 @@ module Vagrant
             if !stdout.empty?
               re = /src ([0-9\.]+)/
               ip = stdout.match(re)[1]
+              zone = @zone.name
 
               p = PdnsRestApiClient.new(env[:machine].config.powerdns.api_url,
                                         env[:machine].config.powerdns.api_key)
 
               # Only update if IP changed or inactive
-              record_not_found = p.zone(@zone)["records"].select {|v| v["type"] == "A" and v["name"] == @domain and v["content"] == ip}.empty?
-              record_disabled = p.zone(@zone)["records"].select { |v| v["type"] == "A" and v["name"] == @domain and v["disable"]}.empty?
+              record_not_found = p.zone(zone)["records"].select {|v| v["type"] == "A" and v["name"] == @domain and v["content"] == ip}.empty?
+              record_disabled = p.zone(zone)["records"].select { |v| v["type"] == "A" and v["name"] == @domain and v["disable"]}.empty?
 
               if record_not_found or record_disabled
                 env[:ui].info "PowerDNS action..."
@@ -41,10 +42,10 @@ module Vagrant
                   name: @domain,
                   type: "A"
                 }
-                comments = p.zone(@zone)["comments"].delete_if { |v| v["name"] != @domain  }
+                comments = p.zone(zone)["comments"].delete_if { |v| v["name"] != @domain  }
                 comments << new_comment
 
-                ret = p.modify_domain(domain: @domain, ip: ip, zone_id: @zone,
+                ret = p.modify_domain(domain: @domain, ip: ip, zone_id: zone,
                                       comments: comments)
 
                 # Check return
@@ -61,9 +62,9 @@ module Vagrant
 
                 # Display ui
                 if error.nil?
-                    env[:ui].detail "=> record #{@domain}(#{ip}) in zone #{@zone} added !"
+                    env[:ui].detail "=> record #{@domain}(#{ip}) in zone #{zone} added !"
                 else
-                  env[:ui].detail "=> failed to add record #{@domain}(#{ip}) in zone #{@zone}. Error was: #{error}"
+                  env[:ui].detail "=> failed to add record #{@domain}(#{ip}) in zone #{zone}. Error was: #{error}"
                 end
               end
             end
@@ -79,10 +80,10 @@ module Vagrant
       def initialize(app, env)
         @app = app
         @machine = env[:machine]
+        @zone = env[:machine].config.powerdns.default_zone
         @host = env[:machine].config.vm.hostname.nil? ?
           env[:machine].name.to_s : env[:machine].config.vm.hostname.to_s
-        @domain = @host + env[:machine].config.powerdns.default_zone.to_s
-        @zone = env[:machine].config.powerdns.default_zone.name
+        @domain = @host.include?(@zone.name)? @host : @host + @zone.dotted
 
         # Identify who i am
         @myname = Etc.getpwuid[:gecos]
@@ -95,11 +96,12 @@ module Vagrant
           p = PdnsRestApiClient.new(env[:machine].config.powerdns.api_url,
                                     env[:machine].config.powerdns.api_key)
 
+          zone = @zone.name
           # Get A record
-          record = p.zone(@zone)
+          record = p.zone(zone)["records"].find {|v| v["name"] == @domain}
 
           # only disable if active
-          if not record["records"].find {|v| v["name"] == @domain}["disabled"]
+          if !record.nil? and not record["disabled"]
             env[:ui].info "PowerDNS action..."
 
             # Prepare comment to be appended
@@ -115,7 +117,7 @@ module Vagrant
             # Get the old IP
             ip = record["records"].find {|v| v["name"] == @domain}["content"]
 
-            ret = p.disable_domain(domain: @domain, ip: ip, zone_id: @zone,
+            ret = p.disable_domain(domain: @domain, ip: ip, zone_id: zone,
                                    comments: comments)
 
             # Check return
@@ -132,9 +134,9 @@ module Vagrant
 
             # Display ui
             if error.nil?
-                env[:ui].detail "=> record #{@domain}(#{ip}) in zone #{@zone} disabled !"
+                env[:ui].detail "=> record #{@domain}(#{ip}) in zone #{zone} disabled !"
             else
-              env[:ui].detail "=> failed to disab;e record #{@domain} in zone #{@zone}. Error was: #{error}"
+              env[:ui].detail "=> failed to disab;e record #{@domain} in zone #{zone}. Error was: #{error}"
             end
           end
 
