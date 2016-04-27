@@ -11,7 +11,6 @@ module Vagrant
         @domain = @host.include?(@zone.name)? @host : @host + @zone.dotted
 
         # Identify who i am
-        @myname = Etc.getpwuid[:gecos]
         @myuser = Etc.getlogin.gsub(/\s+/, '')
         @myhost = Socket.gethostname
       end
@@ -37,8 +36,8 @@ module Vagrant
                 env[:ui].info "PowerDNS action..."
                 # Append new comment
                 new_comment = {
-                  content: "#{@myname} (#{@myuser}) added this record from #{@myhost}",
-                  account: @myname,
+                  content: "#{@myuser} added this record from #{@myhost}",
+                  account: @myuser,
                   name: @domain,
                   type: "A"
                 }
@@ -86,7 +85,6 @@ module Vagrant
         @domain = @host.include?(@zone.name)? @host : @host + @zone.dotted
 
         # Identify who i am
-        @myname = Etc.getpwuid[:gecos]
         @myuser = Etc.getlogin.gsub(/\s+/, '')
         @myhost = Socket.gethostname
       end
@@ -106,8 +104,8 @@ module Vagrant
 
             # Prepare comment to be appended
             new_comment = {
-              content: "#{@myname} (#{@myuser}) disabled this record from #{@myhost}",
-              account: @myname,
+              content: "#{@myuser} disabled this record from #{@myhost}",
+              account: @myuser,
               name: @domain,
               type: "A"
             }
