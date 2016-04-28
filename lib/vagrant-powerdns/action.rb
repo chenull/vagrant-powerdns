@@ -97,6 +97,8 @@ module Vagrant
           zone = @zone.name
           # Get A record
           record = p.zone(zone)["records"].find {|v| v["name"] == @domain}
+          # Get comments for this domain
+          comments = p.zone(zone)["comments"].select {|v| v["name"] == @domain}
 
           # only disable if active
           if !record.nil? and not record["disabled"]
@@ -109,11 +111,10 @@ module Vagrant
               name: @domain,
               type: "A"
             }
-            comments = record["comments"].delete_if { |v| v["name"] != @domain }
             comments << new_comment
 
             # Get the old IP
-            ip = record["records"].find {|v| v["name"] == @domain}["content"]
+            ip = record["content"]
 
             ret = p.disable_domain(domain: @domain, ip: ip, zone_id: zone,
                                    comments: comments)
